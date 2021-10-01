@@ -3,8 +3,6 @@ library(dplyr, warn.conflicts = FALSE)
 library(readr)
 library(ggplot2)
 
-## Set work directory
-setwd('D:/Robson/data/cites/citesTrade/CITES_Trade/')
 
 ## read all the data sets and merge it
 # citesTrade <- list.files(
@@ -16,19 +14,28 @@ setwd('D:/Robson/data/cites/citesTrade/CITES_Trade/')
 # 
 # write.csv2(
 #         citesTrade,
-#         'D:/Robson/data/cites/citesTrade/output/citesTrade.csv',
+#         './output/citesTrade.csv',
 #         row.names = FALSE
 # )
 
 ## Read the new data set
-citesTrade <- read_csv2('./output/citesTrade.csv')
+citesTrade <- read_csv('./output/citesTrade.csv')
 
 head(citesTrade)
 tail(citesTrade)
-as.vector(unique(citesTrade$Taxon))
+str(citesTrade) ## Investigate the structure of the data set
+as.vector(unique(citesTrade$Year))
 
-test <- citesTrade %>%
-        filter(Year == 2020)
+## Read the codes of countries
+codCountries <- read.csv2('./output/CodCountries.csv')
+
+## join
+t <- citesTrade %>%
+        left_join(codCountries[, 2:3], by = 'Exporter')
+        left_join(codCountries[, 2:3], by = 'Importer')
+
+t %>% select(16:22)
+glimpse(t)
 
 ## Most commercialized families
 citesFamily <- citesTrade %>%
@@ -49,7 +56,7 @@ familyPlot <- ggplot(citesFamily, aes(Family, n)) +
                 axis.title = element_text(hjust = 0.5)
         ) +
         labs(
-                title = 'Top 10 Families CITES Trade',
+                title = 'Top 10 Families CITES Trade - 1975-2020',
                 x = '', y = ''
         )
 
@@ -65,14 +72,15 @@ citesGenus$Genus <- with(citesGenus, reorder(Genus, n))
 
 genusPlot <- ggplot(citesGenus, aes(Genus, n)) +
         geom_col(fill = 'steelblue') + coord_flip() +
-        geom_text(aes(label = format(n, big.mark = ','), hjust = 1), color = 'white') +
+        geom_text(aes(label = format(n, big.mark = ','),
+                      hjust = 1), color = 'white') +
         theme(
                 axis.text.x = element_blank(),
                 axis.ticks = element_blank(),
                 axis.title = element_text(hjust = 0.5)
         ) +
         labs(
-                title = 'Top 10 Genus CITES Trade',
+                title = 'Top 10 Genus CITES Trade - 1975-2020',
                 x = '', y = ''
         )
 
@@ -88,14 +96,15 @@ citesTaxon$Taxon <- with(citesTaxon, reorder(Taxon, n))
 
 taxonPlot <- ggplot(citesTaxon, aes(Taxon, n)) +
         geom_col(fill = 'steelblue') + coord_flip() +
-        geom_text(aes(label = format(n, big.mark = ','), hjust = 1), color = 'white') +
+        geom_text(aes(label = format(n, big.mark = ','),
+                      hjust = 1), color = 'white') +
         theme(
                 axis.text.x = element_blank(),
                 axis.ticks = element_blank(),
                 axis.title = element_text(hjust = 0.5)
         ) +
         labs(
-                title = 'Top 10 Species CITES Trade',
+                title = 'Top 10 Species CITES Trade - 1975-2020',
                 x = '', y = ''
         )
 
@@ -113,18 +122,24 @@ citesLicenses <- citesTrade %>%
 licensesPlot <- ggplot(citesLicenses, aes(Year, n)) +
         geom_col(fill = 'steelblue') +
         scale_y_continuous(labels = scales::label_number(big.mark = ',')) +
-        annotate('text', x = 2020, y = 8298, label = '8298', angle = 90, hjust = -0.5) +
+        annotate('text', x = 2020, y = 8298, 
+                 label = '8298', angle = 90, hjust = -0.5) +
         theme(
                 axis.title = element_text(hjust = 0.5)
         ) +
         labs(
-                title = 'CITES Licenses by Year',
+                title = 'CITES Licenses by Year - 1975-2020',
                 x = '', y = ''
         )
 
 licensesPlot
 
 ## Main Importer Countries
+citesImporter <- citesTrade %>%
+        select(Year, Taxon, Family, Importer, Exporter) %>%
+        group_by(Year, Importer, Exporter) %>%
+        tidyr::drop_na() %>%
+        top_n(Importer, 5)
 
 ## Main Exporter Countries
 
