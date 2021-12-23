@@ -19,11 +19,11 @@ library(ggplot2)
 # )
 
 ## Read the new data set
-citesTrade <- read_csv('./output/citesTrade.csv')
+citesTrade <- readr::read_csv2('./output/citesTrade.csv')
 
 head(citesTrade)
 tail(citesTrade)
-str(citesTrade) ## Investigate the structure of the data set
+glimpse(citesTrade) ## Investigate the structure of the data set
 as.vector(unique(citesTrade$Year))
 
 ## Read the codes of countries
@@ -36,6 +36,7 @@ t <- citesTrade %>%
 
 t %>% select(16:22)
 glimpse(t)
+
 
 ## Most commercialized families
 citesFamily <- citesTrade %>%
